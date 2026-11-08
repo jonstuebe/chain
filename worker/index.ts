@@ -1,6 +1,7 @@
 import puzzlesData from './puzzles.json';
 import type { Puzzle } from '../src/lib/types';
 import { isTodaySomewhere, parseDateKey, puzzleForDate } from './puzzles';
+import { handleWords, type WordsDb } from './words';
 
 const PUZZLES = puzzlesData as Puzzle[];
 const ROUTE = /^\/api\/puzzle\/([^/]+)$/;
@@ -30,8 +31,14 @@ function json(body: unknown, status: number, headers: Record<string, string> = {
   });
 }
 
+interface Env {
+  WORDS: WordsDb;
+}
+
 export default {
-  fetch(request: Request): Response {
+  fetch(request: Request, env: Env): Response | Promise<Response> {
+    const { pathname } = new URL(request.url);
+    if (pathname.startsWith('/api/words/')) return handleWords(request, env.WORDS);
     return handle(request, Date.now());
   },
 };

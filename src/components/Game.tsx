@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { parOf, type Puzzle } from '../lib/types';
-import { checkStep, distancesTo, findHint, overPar, scoreName } from '../lib/ladder';
+import { NOT_A_WORD, checkShape, distanceOf, distancesTo, findHint, overPar, scoreName } from '../lib/ladder';
+import { isKnownWord, lookupWord } from '../lib/dictionary';
 import type { PuzzleRecord } from '../lib/storage';
 import { Ladder } from './Ladder';
 import { Keyboard, type Key } from './Keyboard';
@@ -23,6 +24,8 @@ export function Game({ puzzle, puzzleNumber, date, record, onRecord, onAnnounce,
   const [typed, setTyped] = useState('');
   const [shake, setShake] = useState(0);
   const [confirming, setConfirming] = useState(false);
+  /** True while the big dictionary is being asked about a word. */
+  const [checking, setChecking] = useState(false);
   const distances = useMemo(() => distancesTo(puzzle.target), [puzzle.target]);
 
   const par = parOf(puzzle);
@@ -38,9 +41,17 @@ export function Game({ puzzle, puzzleNumber, date, record, onRecord, onAnnounce,
     [onToast],
   );
 
-  const submit = () => {
-    const problem = checkStep(chain, typed);
+  const submit = async () => {
+    if (checking) return;
+    const problem = checkShape(chain, typed);
     if (problem) return reject(problem);
+    if (!isKnownWord(typed)) {
+      setChecking(true);
+      const found = await lookupWord(typed);
+      setChecking(false);
+      if (found === 'offline') return reject(`${NOT_A_WORD} (offline)`);
+      if (found === 'invalid') return reject(NOT_A_WORD);
+    }
     const steps = [...record.steps, typed];
     setTyped('');
     if (typed === puzzle.target) {
@@ -49,13 +60,13 @@ export function Game({ puzzle, puzzleNumber, date, record, onRecord, onAnnounce,
       return;
     }
     onRecord({ ...record, steps });
-    if (!distances.has(typed)) onToast('Dead end: no route to the target from here');
+    if (distanceOf(typed, distances) === undefined) onToast('Dead end: no route to the target from here');
     else onAnnounce(`Step ${steps.length}: ${typed}.`);
   };
 
   const press = (key: Key) => {
-    if (!playing) return;
-    if (key === 'enter') return submit();
+    if (!playing || checking) return;
+    if (key === 'enter') return void submit();
     if (key === 'back') return setTyped((t) => t.slice(0, -1));
     if (/^[a-z]$/.test(key)) setTyped((t) => (t.length < puzzle.start.length ? t + key : t));
   };

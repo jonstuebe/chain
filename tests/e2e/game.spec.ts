@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { closeStats, openGame, step, stubPuzzle, tap } from './helpers';
+import { closeStats, openGame, step, stubPuzzle, stubWords, tap } from './helpers';
 
-test.beforeEach(async ({ page }) => stubPuzzle(page));
+test.beforeEach(async ({ page }) => {
+  await stubPuzzle(page);
+  await stubWords(page);
+});
 
 const ladder = (page: import('@playwright/test').Page) => page.getByRole('list', { name: 'Your chain' });
 
@@ -33,6 +36,13 @@ test('refuses a bad step without spending one', async ({ page }) => {
   await step(page, 'cokd');
   await expect(page.getByText('Not in the word list')).toBeVisible();
   await expect(page.getByText('Steps 0')).toBeVisible();
+});
+
+test('accepts a word only the big dictionary knows', async ({ page }) => {
+  await openGame(page);
+  await step(page, 'cole');
+  await expect(page.getByText('Steps 1')).toBeVisible();
+  await expect(ladder(page).getByRole('button', { name: /Step 1: cole/ })).toBeVisible();
 });
 
 test('undo and climbing back are free', async ({ page }) => {

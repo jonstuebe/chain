@@ -15,6 +15,16 @@ export async function stubPuzzle(page: Page, number = 1, puzzle = TEST_PUZZLE): 
   );
 }
 
+/**
+ * Stands in for the big dictionary: "cole" is in it but not in the bundled list.
+ */
+export async function stubWords(page: Page): Promise<void> {
+  await page.route('**/api/words/*', (route) => {
+    const word = new URL(route.request().url()).pathname.split('/').pop()!;
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ word, valid: word === 'cole' }) });
+  });
+}
+
 /** Opens the game past the first-run help dialog. */
 export async function openGame(page: Page): Promise<void> {
   await page.goto('/');

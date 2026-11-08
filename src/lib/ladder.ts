@@ -38,14 +38,35 @@ export function lettersChanged(a: string, b: string): number {
   return n;
 }
 
-/** Why `word` can't be the next step after the end of `chain`, or null when it can. */
-export function checkStep(chain: readonly string[], word: string, valid: ReadonlySet<string> = VALID): string | null {
+export const NOT_A_WORD = 'Not in the word list';
+
+/** Why `word` can't follow the end of `chain`, ignoring whether it's a real word. */
+export function checkShape(chain: readonly string[], word: string): string | null {
   const current = chain[chain.length - 1];
   if (word.length !== current.length) return `Type a ${current.length}-letter word`;
   if (chain.includes(word)) return word === current ? 'That’s the same word' : 'You’ve already used that word';
   if (lettersChanged(word, current) !== 1) return 'Change exactly one letter';
-  if (!valid.has(word)) return 'Not in the word list';
   return null;
+}
+
+/** Why `word` can't be the next step after the end of `chain`, or null when it can. */
+export function checkStep(chain: readonly string[], word: string, valid: ReadonlySet<string> = VALID): string | null {
+  return checkShape(chain, word) ?? (valid.has(word) ? null : NOT_A_WORD);
+}
+
+/**
+ * Steps from `word` to the target. Words outside VALID (accepted from the big
+ * dictionary) aren't in `distances`, so they route through their VALID neighbours.
+ */
+export function distanceOf(word: string, distances: ReadonlyMap<string, number>, valid: ReadonlySet<string> = VALID): number | undefined {
+  const known = distances.get(word);
+  if (known !== undefined) return known;
+  let best: number | undefined;
+  for (const n of neighbours(word, valid)) {
+    const d = distances.get(n);
+    if (d !== undefined && (best === undefined || d + 1 < best)) best = d + 1;
+  }
+  return best;
 }
 
 export interface Hint {
@@ -60,7 +81,7 @@ export interface Hint {
  * preferring a move onto an everyday word. Null when there's no route from here.
  */
 export function findHint(word: string, distances: ReadonlyMap<string, number>, common: ReadonlySet<string> = COMMON, valid: ReadonlySet<string> = VALID): Hint | null {
-  const here = distances.get(word);
+  const here = distanceOf(word, distances, valid);
   if (here === undefined || here === 0) return null;
   const closer = neighbours(word, valid).filter((n) => distances.get(n) === here - 1);
   const best = closer.find((n) => common.has(n)) ?? closer[0];

@@ -34,6 +34,17 @@ npm run deploy       # build, then wrangler deploy to https://chain.jonstuebe.co
 
 One Cloudflare Worker serves the static site and `GET /api/puzzle/<YYYY-MM-DD>`, which returns `{ number, puzzle }` only while that date is "today" somewhere on Earth (UTC−12 to UTC+14). Every other date gets a 404.
 
+It also serves the big dictionary from D1 (binding `WORDS`, database `chain-words`):
+
+- `GET /api/words/<word>` → `{ word, valid }`
+
+```sh
+npm run seed-words              # apply migrations/ and load data/dictionary.txt into local D1 (dev)
+npm run seed-words -- --remote  # the same, in production
+```
+
+The first `npm run deploy` creates the D1 database and writes its id into `wrangler.jsonc`; seed it with `--remote` afterwards. Re-run the seed whenever `data/dictionary.txt` changes.
+
 ## Content
 
 Puzzles live in `worker/puzzles.json` and never ship in the client bundle. Add one with:
@@ -47,13 +58,15 @@ The par route walks downhill from the start, preferring everyday words, and the 
 
 - Puzzle number = days since `LAUNCH_DATE` in `worker/puzzles.ts` (Puzzle #1 on launch day). When the list runs out, players see "Back tomorrow"; it never loops.
 - `route` is one shortest route, start and target included; Par is its step count. The unit tests check every shipped route is real words one letter apart and truly shortest.
-- `src/lib/words.json` is the dictionary (3–5 letters, from SCOWL): `valid` is every word a step may land on, `common` the everyday subset Hints prefer. It ships to the client on purpose: it's the same every day, so it gives nothing away.
+- `src/lib/words.json` is the dictionary (3–5 letters, from SCOWL): `valid` is every word a step may land on, `common` the everyday subset Hints prefer. It ships to the client on purpose: it's the same every day, so it gives nothing away. It alone decides Par, Hints and dead ends.
+- `data/dictionary.txt` is the big dictionary: every 3–5 letter word from [dwyl/english-words](https://github.com/dwyl/english-words) (public domain) plus everything in `valid`. It lives in D1, never in the bundle. When online, a Step the bundled list rejects is checked against it. See `docs/adr/0002-big-dictionary-in-d1.md`.
 
 ## Structure
 
 ```
 worker/
   index.ts           GET /api/puzzle/:date with the "today somewhere" gate
+  words.ts           GET /api/words/:word lookups, from D1
   puzzles.ts         launch date, puzzle number, date window
   puzzles.json       every Puzzle (server only)
 src/
@@ -61,11 +74,15 @@ src/
   lib/puzzle.ts      local date key, DST-safe day maths, next midnight
   lib/ladder.ts      step rules, distances to the target, Hints, scoring
   lib/words.ts       the dictionary, from words.json
+  lib/dictionary.ts  big-dictionary lookups, remembered offline
   lib/share.ts       share text + Web Share API / clipboard fallback
   lib/storage.ts     versioned localStorage, streaks, stats
   lib/pwa.ts         service worker registration + update prompt
   components/        Game, Ladder, Keyboard, Result, modals, toasts
 scripts/
   add-puzzle.mjs     npm run puzzle
+  seed-words.mjs     npm run seed-words
+migrations/          D1 schema for the big dictionary
+data/dictionary.txt  the big dictionary's words
   make-icons.mjs     PWA icons (npm run icons)
 ```

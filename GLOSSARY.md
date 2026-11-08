@@ -36,5 +36,12 @@ A highlight on the letter to change next to get one Step closer to the target. E
 **Climb back**:
 Returning to an earlier word in the Chain, dropping every Step after it. Free, like Undo.
 
+**Bundled list**:
+The curated dictionary that ships with the app (`src/lib/words.json`). Par, Hints and Dead ends are worked out from it alone.
+
+**Big dictionary**:
+Every 3–5 letter English word, held in D1 by the Worker. When the player is online it accepts Steps the Bundled list doesn't have. It never changes Par.
+_Avoid_: Full list, server list
+
 **Dead end**:
 A word with no route to the target at all.

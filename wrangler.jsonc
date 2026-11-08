@@ -8,6 +8,11 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
+  // The big dictionary (data/dictionary.txt). Wrangler creates it on first deploy
+  // and writes its id back here; load the rows with `npm run seed-words`.
+  "d1_databases": [
+    { "binding": "WORDS", "database_name": "chain-words", "migrations_dir": "migrations" }
+  ],
   "routes": [
     { "pattern": "chain.jonstuebe.com", "custom_domain": true }
   ]

@@ -12,6 +12,7 @@
     "test:e2e": "playwright test",
     "icons": "node scripts/make-icons.mjs",
     "puzzle": "node scripts/add-puzzle.mjs",
+    "seed-words": "node scripts/seed-words.mjs",
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
