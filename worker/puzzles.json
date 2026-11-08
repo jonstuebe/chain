@@ -94,7 +94,7 @@
   {"id":93,"start":"boat","target":"sail","route":["boat","coat","coal","coil","soil","sail"]},
   {"id":94,"start":"oar","target":"row","route":["oar","car","caw","raw","row"]},
   {"id":95,"start":"fox","target":"den","route":["fox","cox","con","don","den"]},
-  {"id":96,"start":"song","target":"bird","route":["song","sang","bang","band","bind","bird"]},
+  {"id":96,"start":"song","target":"bird","route":["song","sing","bing","bind","bird"]},
   {"id":97,"start":"worm","target":"dirt","route":["worm","warm","wart","dart","dirt"]},
   {"id":98,"start":"moth","target":"lamp","route":["moth","math","lath","late","lame","lamp"]},
   {"id":99,"start":"hog","target":"sun","route":["hog","bog","bug","bun","sun"]},
