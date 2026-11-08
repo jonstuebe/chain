@@ -43,7 +43,7 @@ npm run seed-words              # apply migrations/ and load data/dictionary.txt
 npm run seed-words -- --remote  # the same, in production
 ```
 
-The first `npm run deploy` creates the D1 database and writes its id into `wrangler.jsonc`; seed it with `--remote` afterwards. Re-run the seed whenever `data/dictionary.txt` changes.
+Re-run the remote seed whenever `data/dictionary.txt` changes.
 
 ## Content
 
