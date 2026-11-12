@@ -14,6 +14,10 @@ describe('resultLine', () => {
     expect(resultLine(record(['a', 'b', 'c', 'd', 'e'], 1), 4)).toBe('🟩🟩🟩🟩🟨💡 +2');
   });
 
+  it('shows a score under Par as negative', () => {
+    expect(resultLine(record(['a', 'b', 'c']), 4)).toBe('🟩🟩🟩 -1');
+  });
+
   it('says so on a give-up', () => {
     expect(resultLine(record(['cord'], 0, 'gave-up'), 4)).toBe('🏳️ Gave up');
   });

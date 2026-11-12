@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { parOf, type Puzzle } from '../lib/types';
-import { NOT_A_WORD, checkShape, distanceOf, distancesTo, findHint, overPar, scoreName } from '../lib/ladder';
+import { NOT_A_WORD, checkShape, distanceOf, distancesTo, findHint, scoreName, vsPar } from '../lib/ladder';
 import { isKnownWord, lookupWord } from '../lib/dictionary';
 import type { PuzzleRecord } from '../lib/storage';
 import { Ladder } from './Ladder';
@@ -26,6 +26,8 @@ export function Game({ puzzle, puzzleNumber, date, record, onRecord, onAnnounce,
   const [confirming, setConfirming] = useState(false);
   /** True while the big dictionary is being asked about a word. */
   const [checking, setChecking] = useState(false);
+  /** True once the player finishes under Par in this visit, not on a reload. */
+  const [celebrate, setCelebrate] = useState(false);
   const distances = useMemo(() => distancesTo(puzzle.target), [puzzle.target]);
 
   const par = parOf(puzzle);
@@ -55,7 +57,9 @@ export function Game({ puzzle, puzzleNumber, date, record, onRecord, onAnnounce,
     const steps = [...record.steps, typed];
     setTyped('');
     if (typed === puzzle.target) {
-      onAnnounce(`${scoreName(overPar(steps.length, record.hints, par))} You reached ${puzzle.target}.`);
+      const score = vsPar(steps.length, record.hints, par);
+      onAnnounce(`${scoreName(score)} You reached ${puzzle.target}.`);
+      setCelebrate(score < 0);
       onRecord({ ...record, steps, hint: null, status: 'won' });
       return;
     }
@@ -158,7 +162,7 @@ export function Game({ puzzle, puzzleNumber, date, record, onRecord, onAnnounce,
           <Keyboard onKey={press} />
         </section>
       ) : (
-        <Result puzzle={puzzle} puzzleNumber={puzzleNumber} record={record} onExpire={onExpire} onToast={onToast} />
+        <Result puzzle={puzzle} puzzleNumber={puzzleNumber} record={record} onExpire={onExpire} onToast={onToast} celebrate={celebrate} />
       )}
 
       <Modal title="Give up?" open={confirming} onClose={() => setConfirming(false)}>

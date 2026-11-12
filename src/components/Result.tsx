@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { parOf, type Puzzle } from '../lib/types';
-import { overPar, scoreName } from '../lib/ladder';
+import { scoreName, vsPar } from '../lib/ladder';
 import type { PuzzleRecord } from '../lib/storage';
 import { buildShareText, shareResults } from '../lib/share';
+import { Confetti } from './Confetti';
 import { Countdown } from './Countdown';
 import { ShareIcon } from './Icons';
 
@@ -12,18 +13,21 @@ interface ResultProps {
   record: PuzzleRecord;
   onExpire: () => void;
   onToast: (message: string) => void;
+  /** Throw confetti: the player just finished under Par. */
+  celebrate?: boolean;
 }
 
 function subtitle(record: PuzzleRecord, par: number): string {
   if (record.status !== 'won') return 'Here’s the shortest route. Tomorrow’s a fresh climb.';
   const steps = record.steps.length;
-  const over = overPar(steps, record.hints, par);
-  if (over === 0) return `A perfect ${par}-step chain.`;
+  const score = vsPar(steps, record.hints, par);
   const hints = record.hints ? ` and ${record.hints} hint${record.hints > 1 ? 's' : ''}` : '';
-  return `${steps} steps${hints}, ${over} over par.`;
+  if (score < 0) return `${steps} steps${hints}, ${-score} under par. You beat the par route!`;
+  if (score === 0) return `A perfect ${par}-step chain.`;
+  return `${steps} steps${hints}, ${score} over par.`;
 }
 
-export function Result({ puzzle, puzzleNumber, record, onExpire, onToast }: ResultProps) {
+export function Result({ puzzle, puzzleNumber, record, onExpire, onToast, celebrate }: ResultProps) {
   const [manual, setManual] = useState<string | null>(null);
   const par = parOf(puzzle);
   const won = record.status === 'won';
@@ -40,7 +44,8 @@ export function Result({ puzzle, puzzleNumber, record, onExpire, onToast }: Resu
 
   return (
     <section className="result">
-      <h2 className="result-title">{won ? scoreName(overPar(record.steps.length, record.hints, par)) : 'Chain broken'}</h2>
+      {celebrate ? <Confetti /> : null}
+      <h2 className="result-title">{won ? scoreName(vsPar(record.steps.length, record.hints, par)) : 'Chain broken'}</h2>
       <p className="result-sub">{subtitle(record, par)}</p>
       <p className="par-route">
         Par route:{' '}

@@ -1,5 +1,5 @@
 import { parOf, type Puzzle } from './types';
-import { overPar } from './ladder';
+import { vsPar } from './ladder';
 import type { PuzzleRecord } from './storage';
 
 export const GAME_URL = 'chain.jonstuebe.com';
@@ -17,9 +17,9 @@ export const MARKS = {
 export function resultLine(record: PuzzleRecord, par: number): string {
   if (record.status !== 'won') return `${MARKS.gaveUp} Gave up`;
   const steps = record.steps.length;
-  const over = overPar(steps, record.hints, par);
+  const score = vsPar(steps, record.hints, par);
   const marks = MARKS.par.repeat(Math.min(steps, par)) + MARKS.over.repeat(Math.max(0, steps - par)) + MARKS.hint.repeat(record.hints);
-  return `${marks} ${over === 0 ? 'Par' : `+${over}`}`;
+  return `${marks} ${score === 0 ? 'Par' : score > 0 ? `+${score}` : `${score}`}`;
 }
 
 export function buildShareText(puzzleNumber: number, puzzle: Puzzle, record: PuzzleRecord): string {
