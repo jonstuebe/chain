@@ -89,13 +89,26 @@ export function findHint(word: string, distances: ReadonlyMap<string, number>, c
   return { word, position: [...word].findIndex((c, i) => c !== best[i]) };
 }
 
-/** Strokes over Par: each step counts one, and so does each Hint. */
-export function overPar(steps: number, hints: number, par: number): number {
-  return Math.max(0, steps + hints - par);
+/**
+ * Strokes against Par: each step counts one, and so does each Hint. Negative
+ * when the player beats Par, which the Big dictionary makes possible.
+ */
+export function vsPar(steps: number, hints: number, par: number): number {
+  return steps + hints - par;
 }
 
+/** Strokes over Par, never below zero. */
+export function overPar(steps: number, hints: number, par: number): number {
+  return Math.max(0, vsPar(steps, hints, par));
+}
+
+/** The golf name for a score against Par: -1 is a Birdie, +1 a Bogey. */
 export function scoreName(over: number): string {
-  if (over <= 0) return 'Par!';
+  if (over === -1) return 'Birdie!';
+  if (over === -2) return 'Eagle!';
+  if (over === -3) return 'Albatross!';
+  if (over < 0) return `${-over} under par!`;
+  if (over === 0) return 'Par!';
   if (over === 1) return 'Bogey';
   if (over === 2) return 'Double bogey';
   if (over === 3) return 'Triple bogey';

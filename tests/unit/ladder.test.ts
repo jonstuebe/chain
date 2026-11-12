@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkStep, distancesTo, findHint, lettersChanged, neighbours, overPar, scoreName } from '../../src/lib/ladder';
+import { checkStep, distancesTo, findHint, lettersChanged, neighbours, overPar, scoreName, vsPar } from '../../src/lib/ladder';
 
 /** A tiny dictionary, so routes are easy to reason about. */
 const WORDS = new Set(['cold', 'cord', 'word', 'ward', 'warm', 'card', 'core', 'gold']);
@@ -73,7 +73,13 @@ describe('scoring', () => {
     expect(overPar(5, 1, 4)).toBe(2);
   });
 
+  it('goes negative under Par, but overPar stops at zero', () => {
+    expect(vsPar(3, 0, 4)).toBe(-1);
+    expect(overPar(3, 0, 4)).toBe(0);
+  });
+
   it('names the score like golf', () => {
     expect([0, 1, 2, 3, 4, 7].map(scoreName)).toEqual(['Par!', 'Bogey', 'Double bogey', 'Triple bogey', '+4 over par', '+7 over par']);
+    expect([-1, -2, -3, -4].map(scoreName)).toEqual(['Birdie!', 'Eagle!', 'Albatross!', '4 under par!']);
   });
 });
